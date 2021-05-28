@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\EquipmentRequest;
 use App\Models\Equipment;
 use App\Rules\SerialNumberUniqueRule;
 use Illuminate\Http\JsonResponse;
