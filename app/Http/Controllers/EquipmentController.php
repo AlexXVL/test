@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EquipmentRequest;
 use App\Models\Equipment;
+use App\Rules\SerialNumberUniqueRule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -23,22 +24,44 @@ class EquipmentController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  EquipmentRequest  $request
+     * @param  Request  $request
      * @return array|JsonResponse
      */
-    public function store(EquipmentRequest $request)
+    public function store(Request $request)
     {
-        $validated= $request->validated();
-
-        $equipment_type_id= Equipment::getEquipmentTypeIdFromSerialNumber($validated['serial_number']);
-        if ($equipment_type_id)
-        {
-            $validated['equipment_type_id']= $equipment_type_id;
-            $e= Equipment::create($validated);
-            return response()->json(['data'=> $e], 201);
-        }
+        if (isset($request->all()[0]))
+            $input= $request->all();
         else
-            return response()->json(['errors' => ['equipment_type_id' => ['Не найден тип устройства']]], 422); //400
+            $input[]= $request->all();
+
+        $response= [];
+        foreach ($input as $item)
+        {
+            $request= new Request;
+            $keys= array_keys($item);
+            foreach ($keys as $key)
+                $request->merge([$key=> $item[$key]]);
+
+            $request->validate([
+                'serial_number' => ['required', 'string', new SerialNumberUniqueRule()],
+            ]);
+
+            $equipment_type_id= Equipment::getEquipmentTypeIdFromSerialNumber($request->input('serial_number'));
+
+            if ($equipment_type_id)
+            {
+                $request->merge(['equipment_type_id'=> $equipment_type_id]);
+                Equipment::create($request->input());
+                $response['data'][]= ['serial_number'=> $request->input('serial_number')];
+            }
+            else
+                $response['errors'][]=  [
+                                            'equipment_type_id' => ['Не найден тип устройства'],
+                                            'serial_number'=> $request->input('serial_number')
+                                        ];
+        }
+
+        return response()->json($response, isset($response['errors']) ? 422 : 201);
     }
 
     /**
