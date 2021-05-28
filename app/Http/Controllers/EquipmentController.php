@@ -6,7 +6,6 @@ use App\Http\Requests\EquipmentRequest;
 use App\Models\Equipment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Rules\SerialNumberUniqueRule;
 
 class EquipmentController extends Controller
 {
@@ -30,9 +29,6 @@ class EquipmentController extends Controller
     public function store(EquipmentRequest $request)
     {
         $validated= $request->validated();
-//        $request->validate([
-//            'serial_number' => ['required', 'string', new SerialNumberUniqueRule()],
-//        ]);
 
         $equipment_type_id= Equipment::getEquipmentTypeIdFromSerialNumber($validated['serial_number']);
         if ($equipment_type_id)
