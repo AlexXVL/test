@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\EquipmentRequest;
 use App\Models\Equipment;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use App\Rules\SerialNumberUniqueRule;
 
 class EquipmentController extends Controller
 {
@@ -31,9 +30,9 @@ class EquipmentController extends Controller
     public function store(EquipmentRequest $request)
     {
         $validated= $request->validated();
-
-        if (Equipment::where('serial_number', $validated['serial_number'])->count())
-            return response()->json(['errors' => ['serial_number' => ['Серийный номер оборудования должен быть уникальным']]], 422); //400
+//        $request->validate([
+//            'serial_number' => ['required', 'string', new SerialNumberUniqueRule()],
+//        ]);
 
         $equipment_type_id= Equipment::getEquipmentTypeIdFromSerialNumber($validated['serial_number']);
         if ($equipment_type_id)

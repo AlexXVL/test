@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Models\EquipmentType;
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\SerialNumberUniqueRule;
 
 class EquipmentRequest extends FormRequest
 {
@@ -31,41 +31,16 @@ class EquipmentRequest extends FormRequest
     }
 
 
-//    public function withValidator($validator)
-//    {
-//        if(!$validator->fails())
-//        {
-//            $validator->after(function ($validator)
-//            {
-//                if( is_null($id= $this->find_serial_number_mask($this->input('serial_number'))) )
-//                {
-//                    $validator->errors()->add('serial_number', 'Не найдена маска серийного номера!');
-//                }
-//            });
-//        }
-//    }
-//
-//
-//    /**
-//     * @param string $serial_number
-//     * @return int|null
-//     */
-//    private function find_serial_number_mask(string $serial_number)
-//    {
-//        $serial_number_masks= EquipmentType::select(['id', 'serial_number_mask'])->get();
-//
-//        foreach ($serial_number_masks as $item)
-//        {
-//            if (strlen($serial_number) !== strlen($item->serial_number_mask))
-//                continue;
-//
-//            $pattern= EquipmentType::convert_mask_to_regexp_pattern($item->serial_number_mask);
-//            if (preg_match($pattern, $serial_number))
-//            {
-//                return $item->id;
-//            }
-//
-//        }
-//        return null;
-//    }
+    public function withValidator($validator)
+    {
+        if(!$validator->fails())
+        {
+            $validator->after(function ($validator)
+            {
+                $this->validate([
+                    'serial_number' => ['required', 'string', new SerialNumberUniqueRule()],
+                ]);
+            });
+        }
+    }
 }
